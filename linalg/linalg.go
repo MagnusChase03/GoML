@@ -12,6 +12,13 @@ type Matrix struct {
 };
 
 func NewMatrix(r int, c int) *Matrix {
+    if r < 1 {
+        r = 1
+    }
+    if c < 1 {
+        c = 1
+    }
+
     data := make([][]float64, r)
     for i := 0; i < r; i++ {
         data[i] = make([]float64, c)

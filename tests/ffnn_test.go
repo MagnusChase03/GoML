@@ -13,15 +13,11 @@ func TestNewFFNN(t *testing.T) {
         TestLog("ml.NewFFNN()", "Failed to create ffnn.", t)
     }
 
-    if len(nn.Data) != 3 || len(nn.Bias) != 3 || len(nn.Weights) != 2 {
+    if len(nn.Bias) != 2 || len(nn.Weights) != 2 {
         TestLog("ml.NewFFNN()", "FFNN has incorrect number of layers.", t)
     }
 
-    if len(nn.Data[0].Data) != 3 || len(nn.Data[1].Data) != 2 || len(nn.Data[2].Data) != 1 {
-        TestLog("ml.NewFFNN()", "FFNN data layer not allocated properly.", t)
-    }
-
-    if len(nn.Bias[0].Data) != 3 || len(nn.Bias[1].Data) != 2 || len(nn.Bias[2].Data) != 1 {
+    if len(nn.Bias[0].Data) != 2 || len(nn.Bias[1].Data) != 1 {
         TestLog("ml.NewFFNN()", "FFNN bias layer not allocated properly.", t)
     }
 

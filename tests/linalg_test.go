@@ -64,3 +64,31 @@ func TestMatrixMultiply(t *testing.T) {
         TestLog("linalg.Matrix.Multiply()", "Matrix multiplication incorrect.", t)
     }
 }
+
+func TestMatrixAdd(t *testing.T) {
+    m, _ := linalg.NewMatrix(2, 2)
+    m2, _ := linalg.NewMatrix(2, 2)
+    m3, _ := linalg.NewMatrix(1, 1)
+
+    if _, err := m.Add(m3); err == nil {
+        TestLog("linalg.Matrix.Add()", "Dimension check failed.", t)
+    }
+
+    m.Data[0][0] = 1
+    m.Data[0][1] = 1
+    m2.Data[0][0] = 2
+    m2.Data[1][0] = 2
+
+    m4, err := m.Add(m2)
+    if err != nil {
+        TestLog("linalg.Matrix.Add()", "Dimension check failed for correct dimensions.", t)
+    }
+
+    if m4.Rows != 2 || m4.Cols != 2 {
+        TestLog("linalg.Matrix.Add()", "Result matrix dimensions wrong.", t)
+    } 
+
+    if m4.Data[0][0] != 3 || m4.Data[0][1] != 1 || m4.Data[1][0] != 2 {
+        TestLog("linalg.Matrix.Add()", "Matrix addition incorrect.", t)
+    }
+}

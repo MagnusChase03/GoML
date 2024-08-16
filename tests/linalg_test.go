@@ -2,6 +2,7 @@ package tests
 
 import (
     "testing"
+    "context"
 
     "github.com/MagnusChase03/GoML/linalg"
 )
@@ -39,8 +40,10 @@ func TestMatrixMultiply(t *testing.T) {
     m, _ := linalg.NewMatrix(2, 2)
     m2, _ := linalg.NewMatrix(2, 3)
     m3, _ := linalg.NewMatrix(1, 1)
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
 
-    if _, err := m.Multiply(m3); err == nil {
+    if _, err := m.Multiply(ctx, m3); err == nil {
         TestLog("linalg.Matrix.Multiply()", "Dimension check failed.", t)
     }
 
@@ -51,7 +54,7 @@ func TestMatrixMultiply(t *testing.T) {
     m2.Data[0][2] = 3
     m2.Data[1][2] = 3
 
-    m4, err := m.Multiply(m2)
+    m4, err := m.Multiply(ctx, m2)
     if err != nil {
         TestLog("linalg.Matrix.Multiply()", "Dimension check failed for correct dimensions.", t)
     }
@@ -69,8 +72,10 @@ func TestMatrixAdd(t *testing.T) {
     m, _ := linalg.NewMatrix(2, 2)
     m2, _ := linalg.NewMatrix(2, 2)
     m3, _ := linalg.NewMatrix(1, 1)
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
 
-    if _, err := m.Add(m3); err == nil {
+    if _, err := m.Add(ctx, m3); err == nil {
         TestLog("linalg.Matrix.Add()", "Dimension check failed.", t)
     }
 
@@ -79,7 +84,7 @@ func TestMatrixAdd(t *testing.T) {
     m2.Data[0][0] = 2
     m2.Data[1][0] = 2
 
-    m4, err := m.Add(m2)
+    m4, err := m.Add(ctx, m2)
     if err != nil {
         TestLog("linalg.Matrix.Add()", "Dimension check failed for correct dimensions.", t)
     }

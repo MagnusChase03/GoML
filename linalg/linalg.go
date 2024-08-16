@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
+    "context"
 )
 
 type Matrix struct {
@@ -86,7 +87,7 @@ func NewRandomMatrix(r int, c int) (*Matrix, error) {
     }, nil
 }
 
-func (m *Matrix) Multiply(m2 *Matrix) (*Matrix, error) {
+func (m *Matrix) Multiply(ctx context.Context, m2 *Matrix) (*Matrix, error) {
     if m.Cols != m2.Rows {
         return nil, fmt.Errorf("Matrix multiply dimension error %d != %d.", m.Cols, m2.Rows);
     }
@@ -99,21 +100,26 @@ func (m *Matrix) Multiply(m2 *Matrix) (*Matrix, error) {
     var wg sync.WaitGroup
     wg.Add(m.Rows)
     for i := 0; i < m.Rows; i++ {
-        go func(row int) {
+        go func(row int, c context.Context) {
             defer wg.Done()
             for j := 0; j < m2.Rows; j++ {
                 for k := 0; k < m2.Cols; k++ {
-                    r.Data[row][k] += m.Data[row][j] * m2.Data[j][k]
+                    select {
+                    case <-c.Done():
+                        return
+                    default:
+                        r.Data[row][k] += m.Data[row][j] * m2.Data[j][k]
+                    }
                 }
             }
-        }(i)
+        }(i, ctx)
     }
 
     wg.Wait()
     return r, nil
 }
 
-func (m *Matrix) Add(m2 *Matrix) (*Matrix, error) {
+func (m *Matrix) Add(ctx context.Context, m2 *Matrix) (*Matrix, error) {
     if m.Cols != m2.Cols || m.Rows != m2.Rows {
         return nil, fmt.Errorf("Matrix addition dimension error %d != %d.", m.Cols, m2.Rows);
     }
@@ -126,12 +132,17 @@ func (m *Matrix) Add(m2 *Matrix) (*Matrix, error) {
     var wg sync.WaitGroup
     wg.Add(m.Rows)
     for i := 0; i < m.Rows; i++ {
-        go func(row int) {
+        go func(row int, c context.Context) {
             defer wg.Done()
             for j := 0; j < m.Cols; j++ {
-                r.Data[row][j] = m.Data[row][j] + m2.Data[row][j]
+                select {
+                case <-c.Done():
+                    return
+                default:
+                    r.Data[row][j] = m.Data[row][j] + m2.Data[row][j]
+                }
             }
-        }(i)
+        }(i, ctx)
     }
 
     wg.Wait()

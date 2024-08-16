@@ -97,25 +97,33 @@ func (m *Matrix) Multiply(ctx context.Context, m2 *Matrix) (*Matrix, error) {
         return nil, fmt.Errorf("%w - Failed to create result matrix.", err)
     }
 
-    var wg sync.WaitGroup
-    wg.Add(m.Rows)
+    errChan := make(chan error)
     for i := 0; i < m.Rows; i++ {
-        go func(row int, c context.Context) {
-            defer wg.Done()
+        go func(row int, e chan error, c context.Context) {
             for j := 0; j < m2.Rows; j++ {
                 for k := 0; k < m2.Cols; k++ {
                     select {
                     case <-c.Done():
+                        e<-fmt.Errorf("Context was canceled.")
                         return
                     default:
                         r.Data[row][k] += m.Data[row][j] * m2.Data[j][k]
                     }
                 }
             }
-        }(i, ctx)
+            e<-nil
+        }(i, errChan, ctx)
     }
 
-    wg.Wait()
+    for i := 0; i < m.Rows; i++ {
+        select {
+        case err := <-errChan:
+            if err != nil {
+                return nil, err
+            }
+        }   
+    }
+
     return r, nil
 }
 
@@ -129,22 +137,30 @@ func (m *Matrix) Add(ctx context.Context, m2 *Matrix) (*Matrix, error) {
         return nil, fmt.Errorf("%w - Failed to create result matrix.", err)
     }
 
-    var wg sync.WaitGroup
-    wg.Add(m.Rows)
+    errChan := make(chan error)
     for i := 0; i < m.Rows; i++ {
-        go func(row int, c context.Context) {
-            defer wg.Done()
+        go func(row int, e chan error, c context.Context) {
             for j := 0; j < m.Cols; j++ {
                 select {
                 case <-c.Done():
+                    e<-fmt.Errorf("Context was canceled.")
                     return
                 default:
                     r.Data[row][j] = m.Data[row][j] + m2.Data[row][j]
                 }
             }
-        }(i, ctx)
+            e<-nil
+        }(i, errChan, ctx)
     }
 
-    wg.Wait()
+    for i := 0; i < m.Rows; i++ {
+        select {
+        case err := <-errChan:
+            if err != nil {
+                return nil, err
+            }
+        }   
+    }
+
     return r, nil
 }

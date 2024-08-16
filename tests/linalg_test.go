@@ -7,8 +7,15 @@ import (
 )
 
 func TestNewMatrix(t *testing.T) {
-    m := linalg.NewMatrix(3, 2)
-    m2 := linalg.NewMatrix(0, -1)
+    m, err := linalg.NewMatrix(3, 2)
+    if err != nil {
+        TestLog("linalg.NewMatrix()", "Invalid return from matrix creation.", t)
+    }
+
+    _, err = linalg.NewMatrix(0, -1)
+    if err == nil {
+        TestLog("linalg.NewMatrix()", "Invalid return from matrix creation of invalid dimensions.", t)
+    }
 
     if m.Rows != 3 || m.Cols != 2 {
         TestLog("linalg.NewMatrix()", "Incorrect row or col value.", t)
@@ -26,20 +33,12 @@ func TestNewMatrix(t *testing.T) {
         }
     }
 
-    if m2.Rows != 1 || m2.Cols != 1 {
-        TestLog("linalg.NewMatrix()", "Incorrect row or col value for vaules <= 0.", t)
-    }
-
-    if len(m2.Data) != 1 || len(m2.Data[0]) != 1 {
-        TestLog("linalg.NewMatrix()", "Incorrect row or col allocation for values <= 0.", t)
-    }
-
 }
 
 func TestMatrixMultiply(t *testing.T) {
-    m := linalg.NewMatrix(2, 2)
-    m2 := linalg.NewMatrix(2, 3)
-    m3 := linalg.NewMatrix(1, 1)
+    m, _ := linalg.NewMatrix(2, 2)
+    m2, _ := linalg.NewMatrix(2, 3)
+    m3, _ := linalg.NewMatrix(1, 1)
 
     if _, err := m.Multiply(m3); err == nil {
         TestLog("linalg.Matrix.Multiply()", "Dimension check failed.", t)

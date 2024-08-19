@@ -1,8 +1,8 @@
 package tests
 
 import (
-    "testing"
     "context"
+    "testing"
 
     "github.com/MagnusChase03/GoML/linalg"
 )
@@ -30,10 +30,49 @@ func TestNewMatrix(t *testing.T) {
         for j := 0; j < 2; j++ {
             if m.Data[i][j] != 0 {
                 TestLog("linalg.NewMatrix()", "Value in matrix is non-zero.", t)
-            } 
+            }
         }
     }
+}
 
+func TestVectorFromSlice(t *testing.T) {
+    _, err := linalg.VectorFromSlice([]float64{})
+    if err == nil {
+        TestLog("linalg.VectorFromSlice()", "Dimension check failed.", t)
+    }
+
+    v, err := linalg.VectorFromSlice([]float64{1.0, 2.0, 3.0})
+    if err != nil {
+        TestLog("linalg.VectorFromSlice()", "Failed to create vector.", t)
+    }
+
+    if v.Cols != 1 || v.Rows != 3 {
+        TestLog("linalg.VectorFromSlice()", "Failed to create vector with correct dimensions.", t)
+    }
+
+    if v.Data[0][0] != 1.0 || v.Data[1][0] != 2.0 || v.Data[2][0] != 3.0 {
+        TestLog("linalg.VectorFromSlice()", "Failed to create vector with correct values.", t)
+    }
+}
+
+func TestMatrixFromSlice(t *testing.T) {
+    _, err := linalg.MatrixFromSlice([][]float64{})
+    if err == nil {
+        TestLog("linalg.MatrixFromSlice()", "Dimension check failed.", t)
+    }
+
+    m, err := linalg.MatrixFromSlice([][]float64{{1.0, 2.0}, {3.0, 4.0}})
+    if err != nil {
+        TestLog("linalg.MatrixFromSlice()", "Failed to create matrix.", t)
+    }
+
+    if m.Cols != 2 || m.Rows != 2 {
+        TestLog("linalg.MatrixFromSlice()", "Failed to create matrix with correct dimensions.", t)
+    }
+
+    if m.Data[0][0] != 1.0 || m.Data[0][1] != 2.0 || m.Data[1][0] != 3.0 || m.Data[1][1] != 4.0 {
+        TestLog("linalg.VectorFromSlice()", "Failed to create matrix with correct values.", t)
+    }
 }
 
 func TestMatrixMultiply(t *testing.T) {
@@ -61,7 +100,7 @@ func TestMatrixMultiply(t *testing.T) {
 
     if m4.Rows != 2 || m4.Cols != 3 {
         TestLog("linalg.Matrix.Multiply()", "Result matrix dimensions wrong.", t)
-    } 
+    }
 
     if m4.Data[0][0] != 4 || m4.Data[0][2] != 6 {
         TestLog("linalg.Matrix.Multiply()", "Matrix multiplication incorrect.", t)
@@ -91,7 +130,7 @@ func TestMatrixAdd(t *testing.T) {
 
     if m4.Rows != 2 || m4.Cols != 2 {
         TestLog("linalg.Matrix.Add()", "Result matrix dimensions wrong.", t)
-    } 
+    }
 
     if m4.Data[0][0] != 3 || m4.Data[0][1] != 1 || m4.Data[1][0] != 2 {
         TestLog("linalg.Matrix.Add()", "Matrix addition incorrect.", t)

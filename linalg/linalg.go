@@ -49,7 +49,10 @@ func VectorFromSlice(d []float64) (*Matrix, error) {
 }
 
 func MatrixFromSlice(d [][]float64) (*Matrix, error) {
-    if len(d) < 1 || len(d[0]) < 1 {
+    if len(d) < 1 {
+        return nil, fmt.Errorf("Cannot create matrix of dimension %dxX.", len(d))
+    }
+    if len(d[0]) < 1 {
         return nil, fmt.Errorf("Cannot create matrix of dimension %dx%d.", len(d), len(d[0]))
     }
 
@@ -121,7 +124,7 @@ func (m *Matrix) Multiply(ctx context.Context, m2 *Matrix) (*Matrix, error) {
             if err != nil {
                 return nil, err
             }
-        }   
+        }
     }
 
     return r, nil
@@ -159,7 +162,7 @@ func (m *Matrix) Add(ctx context.Context, m2 *Matrix) (*Matrix, error) {
             if err != nil {
                 return nil, err
             }
-        }   
+        }
     }
 
     return r, nil

@@ -90,6 +90,42 @@ func NewRandomMatrix(r int, c int) (*Matrix, error) {
     }, nil
 }
 
+func (m *Matrix) Clone(ctx context.Context) (*Matrix, error) {
+    data := make([][]float64, m.Rows)
+    errChan := make(chan error)
+
+    for i := 0; i < m.Rows; i++ {
+        go func(row int, c context.Context, e chan error) {
+            data[row] = make([]float64, m.Cols)
+            for j := 0; j < m.Cols; j++ {
+                select {
+                case <-c.Done():
+                    e<-fmt.Errorf("Context was canceled.")
+                    return
+                default:
+                    data[i][j] = m.Data[row][j]
+                }
+            }
+            e<-nil
+        }(i, ctx, errChan)
+    }
+
+    for i := 0; i < m.Rows; i++ {
+        select {
+        case err := <-errChan:
+            if err != nil {
+                return nil, err
+            }
+        }
+    }
+
+    return &Matrix{
+        Data: data,
+        Rows: m.Rows,
+        Cols: m.Cols,
+    }, nil
+}
+
 func (m *Matrix) Multiply(ctx context.Context, m2 *Matrix) (*Matrix, error) {
     if m.Cols != m2.Rows {
         return nil, fmt.Errorf("Matrix multiply dimension error %d != %d.", m.Cols, m2.Rows);

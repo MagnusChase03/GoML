@@ -47,7 +47,7 @@ func NewFFNN(shape []int) (*FFNN, error) {
             case <-c.Done():
                 return
             default:
-                w[i], err = linalg.NewRandomMatrix(shape[i], shape[i + 1])
+                w[i], err = linalg.NewRandomMatrix(shape[i + 1], shape[i])
                 if err != nil {
                     e<-fmt.Errorf("%w - Failed to create weight matrix.", err)
                     return
@@ -73,8 +73,8 @@ func NewFFNN(shape []int) (*FFNN, error) {
     }, nil
 }
 
-func (f *FFNN) Forward(inputs []*linalg.Matrix) ([]*linalg.Matrix, error) {
-    if len(inputs) < 1 || len(inputs[0].Data) != len(f.Weights[0].Data[0]) {
+func (f *FFNN) Forward(inputs []*linalg.Matrix) ([][]*linalg.Matrix, error) {
+    if len(inputs) < 1 || inputs[0].Rows != f.Weights[0].Cols || inputs[0].Cols != 1 {
         return nil, fmt.Errorf("Input shape is invalid for forward pass.")
     }
 
@@ -82,11 +82,23 @@ func (f *FFNN) Forward(inputs []*linalg.Matrix) ([]*linalg.Matrix, error) {
     ctx, cancel := context.WithCancel(context.Background())
     defer cancel()
 
-    outputs := make([]*linalg.Matrix, len(inputs))
+    modelCache := make([][]*linalg.Matrix, len(inputs))
+    for i := 0; i < len(inputs); i++ {
+        modelCache[i] = make([]*linalg.Matrix, len(f.Weights) + 1)
+    }
+
     for i := 0; i < len(inputs); i++ {
         go func(set int, e chan error, c context.Context) {
             var err error
             result := inputs[set]
+
+            cache, err := inputs[set].Clone(c)
+            if err != nil {
+                errChan<-fmt.Errorf("%w - Failed to clone results to cache.", err)
+                return
+            }
+            modelCache[set][0] = cache
+
             for j := 0; j < len(f.Weights); j++ {
                 select {
                 case <-c.Done():
@@ -111,9 +123,15 @@ func (f *FFNN) Forward(inputs []*linalg.Matrix) ([]*linalg.Matrix, error) {
                             return
                         }
                     }
+
+                    cache, err = result.Clone(c)
+                    if err != nil {
+                        errChan<-fmt.Errorf("%w - Failed to clone results to cache.", err)
+                        return
+                    }
+                    modelCache[set][j + 1] = cache
                 }
             }
-            outputs[set] = result
             errChan<-nil
         }(i, errChan, ctx)
     }
@@ -128,5 +146,5 @@ func (f *FFNN) Forward(inputs []*linalg.Matrix) ([]*linalg.Matrix, error) {
         }
     }
 
-    return outputs, nil
+    return modelCache, nil
 }

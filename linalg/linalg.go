@@ -167,3 +167,41 @@ func (m *Matrix) Add(ctx context.Context, m2 *Matrix) (*Matrix, error) {
 
     return r, nil
 }
+
+func (m *Matrix) Relu(ctx context.Context) (*Matrix, error) {
+    r, err := NewMatrix(m.Rows, m.Cols)
+    if err != nil {
+        return nil, fmt.Errorf("%w - Failed to create result matrix.", err)
+    }
+
+    errChan := make(chan error)
+    for i := 0; i < m.Rows; i++ {
+        go func(row int, e chan error, c context.Context) {
+            for j := 0; j < m.Cols; j++ {
+                select {
+                case <-c.Done():
+                    e<-fmt.Errorf("Context was canceled.")
+                    return
+                default:
+                    if m.Data[row][j] >= 0 {
+                        r.Data[row][j] = m.Data[row][j]
+                    } else {
+                        r.Data[row][j] = 0
+                    }
+                }
+            }
+            e<-nil
+        }(i, errChan, ctx)
+    }
+
+    for i := 0; i < m.Rows; i++ {
+        select {
+        case err := <-errChan:
+            if err != nil {
+                return nil, err
+            }
+        }
+    }
+
+    return r, nil
+}

@@ -92,7 +92,7 @@ func (f *FFNN) Forward(inputs []*linalg.Matrix) ([]*linalg.Matrix, error) {
                 case <-c.Done():
                     return
                 default:
-                    result, err = f.Weights[j].Multiply(c, result) 
+                    result, err = f.Weights[j].Multiply(c, result)
                     if err != nil {
                         errChan<-fmt.Errorf("%w - Failed to multiply weights to result.", err)
                         return
@@ -101,6 +101,12 @@ func (f *FFNN) Forward(inputs []*linalg.Matrix) ([]*linalg.Matrix, error) {
                     result, err = result.Add(c, f.Bias[j])
                     if err != nil {
                         errChan<-fmt.Errorf("%w - Failed to add bias to result.", err)
+                        return
+                    }
+
+                    result, err = result.Relu(c)
+                    if err != nil {
+                        errChan<-fmt.Errorf("%w - Failed to use ReLU on result.", err)
                         return
                     }
                 }

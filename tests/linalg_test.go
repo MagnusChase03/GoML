@@ -136,3 +136,23 @@ func TestMatrixAdd(t *testing.T) {
         TestLog("linalg.Matrix.Add()", "Matrix addition incorrect.", t)
     }
 }
+
+func TestMatrixRelu(t *testing.T) {
+    m, _ := linalg.NewMatrix(3, 1)
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+
+    m.Data[0][0] = 1.0
+    m.Data[1][0] = 2.0
+    m.Data[2][0] = -1.0
+
+    m2, err := m.Relu(ctx)
+    if err != nil {
+        TestLog("linalg.Matrix.Relu()", "ReLU function failed.", t)
+    }
+
+    if m2.Data[0][0] != 1.0 || m2.Data[1][0] != 2.0 || m2.Data[2][0] != 0.0 {
+        TestLog("linalg.Matrix.Relu()", "ReLU function failed in its calculation.", t)
+    }
+
+}

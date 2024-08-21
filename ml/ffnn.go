@@ -104,10 +104,12 @@ func (f *FFNN) Forward(inputs []*linalg.Matrix) ([]*linalg.Matrix, error) {
                         return
                     }
 
-                    result, err = result.Relu(c)
-                    if err != nil {
-                        errChan<-fmt.Errorf("%w - Failed to use ReLU on result.", err)
-                        return
+                    if j < len(f.Weights) - 1 {
+                        result, err = result.Relu(c)
+                        if err != nil {
+                            errChan<-fmt.Errorf("%w - Failed to use ReLU on result.", err)
+                            return
+                        }
                     }
                 }
             }

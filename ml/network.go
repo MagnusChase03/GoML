@@ -109,7 +109,7 @@ func (n *FFNN) Backward(
         len(inputs[0]) != n.Shape[0] ||
         len(correct[0]) != n.Shape[len(n.Layers)] ||
         len(outputs[len(n.Layers) - 1][0]) != n.Shape[len(n.Layers)]) {
-        return fmt.Errorf("Error: Invalid dimensions on paramaters for backward.");
+        return fmt.Errorf("Error: Invalid dimensions on parameters for backward.");
     }
 
     var err error;
@@ -166,4 +166,43 @@ func (n *FFNN) Flush() {
     for i := 0; i < len(n.Layers); i++ {
         n.Layers[i].Flush();
     }
+}
+
+/*
+Train the network with given parameters.
+
+Arguments:
+    - inputs ([][]float64): The batch input.
+    - targets ([][]float64): The batch targets.
+    - lr (float64): The learning rate.
+    - iter (int): The number of iterations to train on.
+
+Returns:
+    - error: The error that occured if any.
+
+Example:
+    n.train(inputs, targets, 0.1, 100);
+*/
+func (n *FFNN) Train(inputs [][]float64, targets [][]float64, lr float64, iter int) error {
+    if (len(inputs) < 1 || 
+        len(inputs) != len(targets) ||
+        len(inputs[0]) != n.Shape[0] ||
+        len(targets[0]) != n.Shape[len(n.Layers)]) {
+        return fmt.Errorf("Error: Invalid dimensions on parameters for train.");
+    }
+
+    for i := 0; i < iter; i++ {
+        outputs, err := n.Forward(inputs);
+        if err != nil {
+            return fmt.Errorf("Error: Failed to forward pass. %w", err);
+        }
+
+        err = n.Backward(inputs, targets, outputs, lr);
+        if err != nil {
+            return fmt.Errorf("Error: Failed to backward pass. %w", err);
+        }
+        n.Flush();
+    }
+
+    return nil;
 }

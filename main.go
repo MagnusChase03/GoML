@@ -14,20 +14,14 @@ func main() {
         return;
     }
 
-    for i := 0; i < 100; i++ {
-        inputs := [][]float64{{1.0, 2.0, 3.0}, {3.0, 2.0, 1.0}};
-        outputs, err := n.Forward(inputs);
-        if err != nil {
-            fmt.Fprintf(os.Stderr, "%v", err);
-            return;
-        }
-        fmt.Printf("%v\n", outputs);
+    inputs := [][]float64{{1.0, 2.0, 3.0}, {3.0, 2.0, 1.0}};
+    targets := [][]float64{{1.0}, {3.0}};
+    n.Train(inputs, targets, 0.1, 100);
 
-        err = n.Backward(inputs, [][]float64{{1.0}, {3.0}}, outputs, 0.01);
-        if err != nil {
-            fmt.Fprintf(os.Stderr, "%v", err);
-            return;
-        }
-        n.Flush();
+    outputs, err := n.Forward(inputs);
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "%v", err);
+        return;
     }
+    fmt.Printf("%v\n", outputs);
 }

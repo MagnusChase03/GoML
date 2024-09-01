@@ -13,6 +13,7 @@ type DenseLayer struct {
     Bias []float64
 
     Delta [][]float64;
+    DeltaBias []float64;
 }
 
 /*
@@ -56,6 +57,7 @@ func NewDenseLayer(i int, o int) (*DenseLayer, error) {
         Weights: weights,
         Bias: make([]float64, o),
         Delta: delta,
+        DeltaBias: make([]float64, o),
     }, nil;
 }
 
@@ -138,6 +140,7 @@ func (d *DenseLayer) Backward(
     for i := 0; i < len(d.Weights); i++ {
         mutexes[i] = make([]sync.Mutex, len(d.Weights[0]));
     }
+    biasMutexes := make([]sync.Mutex, len(d.Weights));
 
     var wg sync.WaitGroup;
     wg.Add(len(inputs));
@@ -151,6 +154,9 @@ func (d *DenseLayer) Backward(
             for j := 0; j < len(d.Weights); j++ {
                 go func(row int) {
                     defer wg2.Done();
+                    biasMutexes[row].Lock();
+                    d.DeltaBias[row] += deltas[set][row] * lr;
+                    biasMutexes[row].Unlock();
                     for k := 0; k < len(d.Weights[row]); k++ {
                         mutexes[row][k].Lock();
                         d.Delta[row][k] += deltas[set][row] * inputs[set][k] * lr;
@@ -186,6 +192,8 @@ func (d *DenseLayer) Flush() {
     for i := 0; i < len(d.Weights); i++ {
         go func(row int) {
             defer wg.Done();
+            d.Bias[row] -= d.DeltaBias[row];
+            d.DeltaBias[row] = 0.0;
             for j := 0; j < len(d.Weights[row]); j++ {
                 d.Weights[row][j] -= d.Delta[row][j];
                 d.Delta[row][j] = 0.0;

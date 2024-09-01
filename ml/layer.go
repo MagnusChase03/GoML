@@ -41,7 +41,7 @@ func NewDenseLayer(i int, o int) (*DenseLayer, error) {
     weights := make([][]float64, o);
     delta := make([][]float64, o);
     for r := 0; r < o; r++ {
-        weights[r] = make([]float64, i);
+    weights[r] = make([]float64, i);
         delta[r] = make([]float64, i);
         go func(row int) {
             defer wg.Done();
@@ -51,7 +51,7 @@ func NewDenseLayer(i int, o int) (*DenseLayer, error) {
         }(r);
     }
 
-    wg.Wait();
+   wg.Wait();
     return &DenseLayer{
         Shape: []int{i, o},
         Weights: weights,
@@ -75,7 +75,7 @@ Example:
     y, err := d.Forward(inputBatch);
 */
 func (d *DenseLayer) Forward(inputs [][]float64) ([][]float64, error) {
-    if len(inputs) < 1 || len(inputs[0]) != len(d.Weights[0]) {
+    if len(inputs) < 1 || len(inputs[0]) != d.Shape[0] {
         return nil, fmt.Errorf("Error: Invalid input dimensions.");
     }
 
@@ -83,17 +83,17 @@ func (d *DenseLayer) Forward(inputs [][]float64) ([][]float64, error) {
     var wg sync.WaitGroup;
     wg.Add(len(inputs));
     for i := 0; i < len(inputs); i++ {
-        result[i] = make([]float64, len(d.Weights));
+        result[i] = make([]float64, d.Shape[1]);
         go func(set int) {
             defer wg.Done();
-            partial := make([]float64, len(d.Weights));
+            partial := make([]float64, d.Shape[1]);
 
             var wg2 sync.WaitGroup;
             wg2.Add(len(d.Weights));
-            for j := 0; j < len(d.Weights); j++ {
+            for j := 0; j < d.Shape[1]; j++ {
                 go func(row int) {
                     defer wg2.Done();
-                    for k := 0; k < len(d.Weights[row]); k++ {
+                    for k := 0; k < d.Shape[0]; k++ {
                         partial[row] += d.Weights[row][k] * inputs[set][k];
                     }
                     partial[row] += d.Bias[row];
@@ -130,34 +130,34 @@ func (d *DenseLayer) Backward(
 ) ([][]float64, error) {
     if (len(inputs) < 1 || 
         len(inputs) != len(deltas) || 
-        len(inputs[0]) != len(d.Weights[0]) || 
-        len(deltas[0]) != len(d.Weights)) {
+        len(inputs[0]) != d.Shape[0] || 
+        len(deltas[0]) != d.Shape[1]) {
         return nil, fmt.Errorf("Error: Invalid inputs or deltas dimensions.");
     }
 
     de := make([][]float64, len(inputs));
-    mutexes := make([][]sync.Mutex, len(d.Weights));
-    for i := 0; i < len(d.Weights); i++ {
-        mutexes[i] = make([]sync.Mutex, len(d.Weights[0]));
+    mutexes := make([][]sync.Mutex, d.Shape[1]);
+    for i := 0; i < d.Shape[1]; i++ {
+        mutexes[i] = make([]sync.Mutex, d.Shape[0]);
     }
-    biasMutexes := make([]sync.Mutex, len(d.Weights));
+    biasMutexes := make([]sync.Mutex, d.Shape[1]);
 
     var wg sync.WaitGroup;
     wg.Add(len(inputs));
     for i := 0; i < len(inputs); i++ {
-        de[i] = make([]float64, len(d.Weights[0]));
+        de[i] = make([]float64, d.Shape[0]);
         go func(set int) {
             defer wg.Done();
 
             var wg2 sync.WaitGroup;
-            wg2.Add(len(d.Weights));
-            for j := 0; j < len(d.Weights); j++ {
+            wg2.Add(d.Shape[1]);
+            for j := 0; j < d.Shape[1]; j++ {
                 go func(row int) {
                     defer wg2.Done();
                     biasMutexes[row].Lock();
                     d.DeltaBias[row] += deltas[set][row] * lr;
                     biasMutexes[row].Unlock();
-                    for k := 0; k < len(d.Weights[row]); k++ {
+                    for k := 0; k < d.Shape[0]; k++ {
                         mutexes[row][k].Lock();
                         d.Delta[row][k] += deltas[set][row] * inputs[set][k] * lr;
                         mutexes[row][k].Unlock();
@@ -188,13 +188,13 @@ Example:
 */
 func (d *DenseLayer) Flush() {
     var wg sync.WaitGroup;
-    wg.Add(len(d.Weights))
-    for i := 0; i < len(d.Weights); i++ {
+    wg.Add(d.Shape[1])
+    for i := 0; i < d.Shape[1]; i++ {
         go func(row int) {
             defer wg.Done();
             d.Bias[row] -= d.DeltaBias[row];
             d.DeltaBias[row] = 0.0;
-            for j := 0; j < len(d.Weights[row]); j++ {
+            for j := 0; j < d.Shape[0]; j++ {
                 d.Weights[row][j] -= d.Delta[row][j];
                 d.Delta[row][j] = 0.0;
             }

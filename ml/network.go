@@ -1,9 +1,3 @@
-/*
-TODO: 
-    - Save/Load function
-    - Write tests
-*/
-
 package ml
 
 import (
@@ -229,6 +223,18 @@ func (n *FFNN) Train(inputs [][]float64, targets [][]float64, lr float64, iter i
     return nil;
 }
 
+/*
+Saves the FFNN to a file in JSON format.
+
+Arguments:
+    - p (string): The path to save the model to.
+
+Returns:
+    - error: The error if any occured
+
+Example:
+    err := n.Save("./model.json");
+*/
 func (n *FFNN) Save(p string) error {
     f, err := os.Create(p);
     if err != nil {
@@ -243,4 +249,31 @@ func (n *FFNN) Save(p string) error {
     }
 
     return nil;
+}
+
+/*
+Create a new FFNN from saved model data.
+
+Arguments:
+    - p (string): The path to load the model from.
+
+Returns:
+    - error: The error if any occured
+
+Example:
+    n, err := n.LoadFFNN("./model.json");
+    
+*/
+func LoadFFNN(p string) (*FFNN, error) {
+    f, err := os.Open(p);
+    if err != nil {
+        return nil, fmt.Errorf("Error: Failed to open file %s. %w", p, err);
+    }
+    defer f.Close();
+    
+    var result FFNN;
+    d := json.NewDecoder(f);
+    d.Decode(&result);
+
+    return &result, nil;
 }

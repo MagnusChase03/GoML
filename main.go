@@ -16,7 +16,7 @@ func main() {
 
     inputs := [][]float64{{1.0, 2.0, 3.0}, {3.0, 2.0, 1.0}};
     targets := [][]float64{{1.0}, {3.0}};
-    n.Train(inputs, targets, 0.1, 100);
+    n.Train(inputs, targets, 0.1, 100, 2);
 
     outputs, err := n.Forward(inputs);
     if err != nil {
@@ -24,4 +24,6 @@ func main() {
         return;
     }
     fmt.Printf("%v\n", outputs);
+
+    n.Save("./model.json")
 }

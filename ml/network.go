@@ -1,7 +1,6 @@
 /*
 TODO: 
     - Save/Load function
-    - Train chunking for SGD
     - Write tests
 */
 
@@ -10,6 +9,8 @@ package ml
 import (
 	"fmt"
 	"sync"
+    "os"
+    "encoding/json"
 )
 
 type FFNN struct {
@@ -183,6 +184,7 @@ Arguments:
     - targets ([][]float64): The batch targets.
     - lr (float64): The learning rate.
     - iter (int): The number of iterations to train on.
+    - cs (int): The chunk size.
 
 Returns:
     - error: The error that occured if any.
@@ -190,7 +192,7 @@ Returns:
 Example:
     n.train(inputs, targets, 0.1, 100);
 */
-func (n *FFNN) Train(inputs [][]float64, targets [][]float64, lr float64, iter int) error {
+func (n *FFNN) Train(inputs [][]float64, targets [][]float64, lr float64, iter int, cs int) error {
     if (len(inputs) < 1 || 
         len(inputs) != len(targets) ||
         len(inputs[0]) != n.Shape[0] ||
@@ -198,17 +200,46 @@ func (n *FFNN) Train(inputs [][]float64, targets [][]float64, lr float64, iter i
         return fmt.Errorf("Error: Invalid dimensions on parameters for train.");
     }
 
-    for i := 0; i < iter; i++ {
-        outputs, err := n.Forward(inputs);
-        if err != nil {
-            return fmt.Errorf("Error: Failed to forward pass. %w", err);
-        }
+    chunks := int(len(inputs) / cs);
+    if len(inputs) % cs > 0 {
+        chunks += 1;
+    }
 
-        err = n.Backward(inputs, targets, outputs, lr);
-        if err != nil {
-            return fmt.Errorf("Error: Failed to backward pass. %w", err);
+    for i := 0; i < iter; i++ {
+        for j := 0; j < chunks; j++ {
+            start := j * cs;
+            end := start + cs;
+            if j == chunks - 1 {
+                end = len(inputs);
+            }
+
+            outputs, err := n.Forward(inputs[start:end]);
+            if err != nil {
+                return fmt.Errorf("Error: Failed to forward pass. %w", err);
+            }
+
+            err = n.Backward(inputs[start:end], targets[start:end], outputs, lr);
+            if err != nil {
+                return fmt.Errorf("Error: Failed to backward pass. %w", err);
+            }
+            n.Flush();
         }
-        n.Flush();
+    }
+
+    return nil;
+}
+
+func (n *FFNN) Save(p string) error {
+    f, err := os.Create(p);
+    if err != nil {
+        return fmt.Errorf("Error: Failed to create file %s. %w", p, err);
+    }
+    defer f.Close();
+    
+    e := json.NewEncoder(f);
+    err = e.Encode(n);
+    if err != nil {
+        return fmt.Errorf("Error: Failed to save json. %w", err);
     }
 
     return nil;

@@ -1,3 +1,10 @@
+/*
+TODO: 
+    - Save/Load function
+    - Train chunking for SGD
+    - Write tests
+*/
+
 package ml
 
 import (

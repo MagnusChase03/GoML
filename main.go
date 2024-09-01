@@ -14,11 +14,25 @@ func main() {
         return;
     }
 
-    inputs := [][]float64{{1.0, 2.0, 3.0}, {3.0, 2.0, 1.0}};
-    targets := [][]float64{{1.0}, {3.0}};
-    n.Train(inputs, targets, 0.1, 100, 2);
+    inputs := [][]float64{
+        {0, 0, 0}, 
+        {0, 1, 0},
+        {0, 1, 1},
+        {1, 0, 0},
+        {1, 0, 1},
+        {1, 1, 1},
+    };
+    targets := [][]float64{
+        {0}, 
+        {1},
+        {0},
+        {1},
+        {0},
+        {1},
+    };
+    n.Train(inputs, targets, 0.01, 100, 2);
 
-    outputs, err := n.Forward(inputs);
+    outputs, err := n.Forward([][]float64{{1, 1, 0}, {0, 0, 1}});
     if err != nil {
         fmt.Fprintf(os.Stderr, "%v", err);
         return;
@@ -27,11 +41,11 @@ func main() {
 
     n.Save("./model.json")
     
-    n2, err := ml.LoadFFNN("./model.json");
+   /*n2, err := ml.LoadFFNN("./model.json");
     if err != nil {
         fmt.Fprintf(os.Stderr, "%v", err);
         return;
     }
     fmt.Printf("%v\n", n.Layers[0].Weights);
-    fmt.Printf("%v\n", n2.Layers[0].Weights);
+    fmt.Printf("%v\n", n2.Layers[0].Weights);*/
 }

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 
-	"github.com/MagnusChase03/GoML/ml"
+    "github.com/MagnusChase03/GoML/ml"
 )
 
 func main() { 

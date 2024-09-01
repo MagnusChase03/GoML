@@ -1,9 +1,9 @@
 package ml
 
 import (
-	"fmt"
-	"math/rand"
-	"sync"
+    "fmt"
+    "math/rand"
+    "sync"
 )
 
 type DenseLayer struct {
@@ -41,7 +41,7 @@ func NewDenseLayer(i int, o int) (*DenseLayer, error) {
     weights := make([][]float64, o);
     delta := make([][]float64, o);
     for r := 0; r < o; r++ {
-    weights[r] = make([]float64, i);
+        weights[r] = make([]float64, i);
         delta[r] = make([]float64, i);
         go func(row int) {
             defer wg.Done();
@@ -51,7 +51,7 @@ func NewDenseLayer(i int, o int) (*DenseLayer, error) {
         }(r);
     }
 
-   wg.Wait();
+    wg.Wait();
     return &DenseLayer{
         Shape: []int{i, o},
         Weights: weights,
@@ -103,7 +103,7 @@ func (d *DenseLayer) Forward(inputs [][]float64) ([][]float64, error) {
             result[set] = partial;
         }(i);
     }
-        
+
     wg.Wait();
     return result, nil;
 }
@@ -129,9 +129,9 @@ func (d *DenseLayer) Backward(
     lr float64,
 ) ([][]float64, error) {
     if (len(inputs) < 1 || 
-        len(inputs) != len(deltas) || 
-        len(inputs[0]) != d.Shape[0] || 
-        len(deltas[0]) != d.Shape[1]) {
+    len(inputs) != len(deltas) ||
+    len(inputs[0]) != d.Shape[0] ||
+    len(deltas[0]) != d.Shape[1]) {
         return nil, fmt.Errorf("Error: Invalid inputs or deltas dimensions.");
     }
 

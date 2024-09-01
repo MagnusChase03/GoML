@@ -12,8 +12,8 @@ type DenseLayer struct {
     Weights [][]float64
     Bias []float64
 
-    Delta [][]float64;
-    DeltaBias []float64;
+    Delta [][]float64
+    DeltaBias []float64
 }
 
 /*
@@ -162,7 +162,7 @@ func (d *DenseLayer) Backward(
                         d.Delta[row][k] += deltas[set][row] * inputs[set][k] * lr;
                         mutexes[row][k].Unlock();
 
-                        de[set][k] -= deltas[set][row] * d.Weights[row][k];
+                        de[set][k] += deltas[set][row] * d.Weights[row][k];
                     }
                 }(j);
             }
